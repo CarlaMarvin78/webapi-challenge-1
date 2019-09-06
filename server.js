@@ -15,65 +15,63 @@ server.get('/api/projects', (req, res) => {
 });
 
 server.get('/api/projects/:id', (req, res) => {
-    db.findById(req.params.id)
-    .then(user => {
-        console.log("user",user);
-        if (user==undefined) {
+    projectDB.get(req.params.id)
+    .then(project => {
+        console.log("projects",project);
+        if (project==undefined) {
             res.status(404).json({message:
-                "The user with the specified ID does not exist."});
+                "The project with the specified ID does not exist."});
         } else {
-            res.status(200).json(user)
+            res.status(200).json(project)
         }
     })
     .catch(err => res.status(500).json({error:
-            "The user information could not be retrieved."}));
+            "The project information could not be retrieved."}));
 });
 
-server.post('/api/projects/:id', (req, res) => {
+server.post('/api/projects', (req, res) => {
     const query = req.query;
-    if(query.name == undefined || query.bio == undefined) {
+    if(query.name == undefined || query.description == undefined) {
         res.status(400).json({errorMessage:
-                    "Please provide name and bio for the user."});
+                    "Please provide name and description for the project."});
     } else {
         console.log("query",query);
-        db.insert({name: query.name, bio: query.bio})
-        .then(id => db.findById(id.id)
-                        .then(user=>res.status(201).json(user))
+        projectDB.insert({name: query.name, description: query.description})
+        .then(project => res.status(201).json(project))
         .catch(err=>res.status(500).json({error:
-                    "There was an error while saving the user to the database"})));
+                    "There was an error while saving the project to the database"}));
     }
 });
 
 server.delete('/api/projects/:id', (req,res) => {
-    db.remove(req.params.id)
+    projectDB.remove(req.params.id)
     .then(num => {
         if(num < 1) {
             res.status(404).json({message:
-            "The user with the specified ID does not exist."
+            "The project with the specified ID does not exist."
             });
         } else {
-            res.status(200);
-            res.end();
+            res.sendStatus(200);
+            
         }
     })
-    .catch (err => res.status(500).json({error: "The user could not be removed."}));
+    .catch (err => res.status(500).json({error: "The project could not be removed."}));
 });
 
 server.put('/api/projects/:id', (req, res) => {
-    if(req.query.name == undefined || req.query.bio == undefined){
-        res.status(400).json({erroMessage: "Please provide name and bio for the user."});
+    if(req.query.name == undefined || req.query.description == undefined){
+        res.status(400).json({erroMessage: "Please provide name and description for the project."});
     } else {
-        db.update(req.params.id, {name:req.query.name, bio:req.query.bio})
-        .then(num => {
-        if (num ==1){
-            db.findById(req.params.id)
-            .then (user => res.status(200).json(user));
+        projectDB.update(req.params.id, {name:req.query.name, description:req.query.description})
+        .then(project=> {
+        if (project != null){
+            res.status(200).json(project);
         } else {
-            res.status(404).json({message:"The user with the specified ID does not exist."});
+            res.status(404).json({message:"The project with the specified ID does not exist."});
         }
     
     })
-    .catch (err => res.status(500).json({error:"The user information could not be modified."}));
+    .catch (err => res.status(500).json({error:"The project information could not be modified."}));
 }
 })
 
