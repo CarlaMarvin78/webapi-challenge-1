@@ -75,4 +75,72 @@ server.put('/api/projects/:id', (req, res) => {
 }
 })
 
+server.get('/api/actions', (req, res) => {
+    actionDB.get() 
+    .then (actions=>res.status(200).json(actions))
+    .catch (err=> res.status(500).json({error:
+            "The list of actions could not be retrieved."}));
+    
+});
+
+server.get('/api/actions/:id', (req, res) => {
+    actionDB.get(req.params.id)
+    .then(action => {
+        console.log("actions", action);
+        if (action==undefined) {
+            res.status(404).json({message:
+                "The action with the specified ID does not exist."});
+        } else {
+            res.status(200).json(action)
+        }
+    })
+    .catch(err => res.status(500).json({error:
+            "The action information could not be retrieved."}));
+});
+
+server.post('/api/actions', (req, res) => {
+    const query = req.query;
+    if(query.project_id == undefined || query.description == undefined || query.notes == undefined) {
+        res.status(400).json({errorMessage:
+                    "Please provide project id, description, and notes for the action."});
+    } else {
+        console.log("query",query);
+        actionDB.insert({project_id: query.project_id, description: query.description, notes: query.notes})
+        .then(action => res.status(201).json(action))
+        .catch(err=>res.status(500).json({error:
+                    "There was an error while saving the action to the database"}));
+    }
+});
+
+server.delete('/api/actions/:id', (req,res) => {
+    actionDB.remove(req.params.id)
+    .then(num => {
+        if(num < 1) {
+            res.status(404).json({message:
+            "The action with the specified ID does not exist."
+            });
+        } else {
+            res.sendStatus(200);
+            
+        }
+    })
+    .catch (err => res.status(500).json({error: "The action could not be removed."}));
+});
+
+server.put('/api/actions/:id', (req, res) => {
+    if(req.query.project_id == undefined || req.query.description == undefined || req.query.notes == undefined){
+        res.status(400).json({erroMessage: "Please provide project id, description, and notes for the project."});
+    } else {
+        actionDB.update(req.params.id, {project_id:req.query.project_id, description:req.query.description, notes: req.query.notes})
+        .then(action=> {
+        if (action != null){
+            res.status(200).json(action);
+        } else {
+            res.status(404).json({message:"The action with the specified ID does not exist."});
+        }
+    
+    })
+    .catch (err => res.status(500).json({error:"The action information could not be modified."}));
+}
+})
 module.exports = server     
