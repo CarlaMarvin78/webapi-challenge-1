@@ -60,7 +60,7 @@ server.delete('/api/projects/:id', (req,res) => {
 
 server.put('/api/projects/:id', (req, res) => {
     if(req.query.name == undefined || req.query.description == undefined){
-        res.status(400).json({erroMessage: "Please provide name and description for the project."});
+        res.status(400).json({errorMessage: "Please provide name and description for the project."});
     } else {
         projectDB.update(req.params.id, {name:req.query.name, description:req.query.description})
         .then(project=> {
@@ -74,6 +74,28 @@ server.put('/api/projects/:id', (req, res) => {
     .catch (err => res.status(500).json({error:"The project information could not be modified."}));
 }
 })
+
+
+// ============Validation Schema============
+
+function validateProjectId (req, res, next){
+    console.log ("validate query:",req.query);
+    const project_id = req.query.project_id;
+    if (project_id == undefined) {
+        res.status(400).json({errorMessage: "A project id is required for the action."})
+    } else {
+        projectDB.get (project_id)
+        .then (project => {
+            if (project == null) {
+                res.status(404).json({message: "The project with the specified id does not exist."})
+            } else {
+                next ();
+            }
+        })
+        .catch (err => res.status(500).json({error: "The project could not be retrieved."}));
+    }
+  }
+//============End Schema============
 
 server.get('/api/actions', (req, res) => {
     actionDB.get() 
@@ -98,7 +120,7 @@ server.get('/api/actions/:id', (req, res) => {
             "The action information could not be retrieved."}));
 });
 
-server.post('/api/actions', (req, res) => {
+server.post('/api/actions', validateProjectId, (req, res, next) => {
     const query = req.query;
     if(query.project_id == undefined || query.description == undefined || query.notes == undefined) {
         res.status(400).json({errorMessage:
@@ -127,9 +149,9 @@ server.delete('/api/actions/:id', (req,res) => {
     .catch (err => res.status(500).json({error: "The action could not be removed."}));
 });
 
-server.put('/api/actions/:id', (req, res) => {
+server.put('/api/actions/:id', validateProjectId, (req, res, next) => {
     if(req.query.project_id == undefined || req.query.description == undefined || req.query.notes == undefined){
-        res.status(400).json({erroMessage: "Please provide project id, description, and notes for the project."});
+        res.status(400).json({errorMessage: "Please provide project id, description, and notes for the project."});
     } else {
         actionDB.update(req.params.id, {project_id:req.query.project_id, description:req.query.description, notes: req.query.notes})
         .then(action=> {
@@ -143,4 +165,22 @@ server.put('/api/actions/:id', (req, res) => {
     .catch (err => res.status(500).json({error:"The action information could not be modified."}));
 }
 })
-module.exports = server     
+
+server.get ('/api/project/:id', (req, res) => {
+    const project_id = req.params.id;
+    projectDB.get (project_id)
+    .then (project => {
+        if (project == null){
+            res.status(404).json({message: "The project with the specified id does not exist."})
+        } else {
+            actionDB.get ()
+            .then (actions => {
+                actions = actions.filter(action => action.project_id == project_id);
+                res.status(200).json (actions);
+            })
+            .catch (err => res.status(500).json({error: "The list of action could not be loaded."}));
+        }
+    })
+    .catch (err => res.status(500).json({error: "The project could not be loaded."}));
+});
+module.exports = server 
