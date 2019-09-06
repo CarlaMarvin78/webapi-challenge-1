@@ -26,13 +26,23 @@ Demonstrate your understanding of this Sprint's concepts by answering the follow
 
 - [ ] Mention two parts of Express that you learned about this week.
 
+Middleware and server-side routing
+
 - [ ] Describe Middleware?
 
+Middleware is software that allows you to use applications not available within the browser. It works to connect two pieces of software... as the kernel and the user application.
+
 - [ ] Describe a Resource?
+   
+    A resource is data that is passed back to the client, such as the list of hobbits.
 
 - [ ] What can the API return to help clients know if a request was successful?
+    
+    The API can return a status code of 200 or 201 to indicate that the request was successful.
 
 - [ ] How can we partition our application into sub-applications?
+
+    We can partition applications into sub-applications by using different mount paths and handlers.
 
 ## Project Setup
 
